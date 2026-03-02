@@ -19,7 +19,7 @@ function doGet(e) {
   }
 
   // กำหนด Sheet ID ตาม Requirement
-  var sheetId = "1LELctfbeEVU9DTZqoUpygnzujZa1gbkfWSh4s_0K4mo";
+  var sheetId = "1Jr-Tmpasz400uv7s4f5AXrxsyPaFdy4vRYM-TmqGY_U";
   // ชื่อแท็บชีตแต่ละรอบ: "คำใบ้ที่ 1", "คำใบ้ที่ 2", "คำใบ้ที่ 3"
   var sheetName = "คำใบ้ที่ " + round;
   var sheet = null;
@@ -43,14 +43,21 @@ function doGet(e) {
 
   // ดึงข้อมูลทั้งหมดในแผ่นงาน
   var data = sheet.getDataRange().getValues();
+  var searchId = String(id).trim();
 
   // เริ่มลูปหาจากแถวที่ 2 เป็นต้นไป (วนลูปข้าม Header ในแถวแรก index=0)
   for (var i = 1; i < data.length; i++) {
-    // Column B (Index 1) คือรหัสนิสิต
-    var rowStudentId = String(data[i][1]).trim();
+    // Column B (Index 1) อาจมีรหัสนิสิตหลายคน คั่นด้วย , (เช่น "66030107,66030108")
+    var rawIds = String(data[i][1]).trim();
+    if (!rawIds) continue;
 
-    // ตรวจสอบว่าตรงกับรหัสที่ค้นหาหรือไม่
-    if (rowStudentId === String(id).trim() && rowStudentId !== "") {
+    // แยกรหัสออกเป็น Array แล้วเช็คทีละตัวว่าตรงกับรหัสที่ค้นหาไหม
+    var idList = rawIds.split(",").map(function (s) {
+      return s.trim();
+    });
+    var found = idList.indexOf(searchId) !== -1;
+
+    if (found) {
       // Column C (Index 2) คือชื่อนิสิต
       var name = data[i][2] ? String(data[i][2]).trim() : "";
 
