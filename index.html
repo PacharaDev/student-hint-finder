@@ -281,13 +281,8 @@
       const nameDisplay = document.getElementById('studentNameDisplay');
       const hintDisplay = document.getElementById('hintTextDisplay');
 
-      // นำข้อมูลลงใน DOM
-      if (name) {
-        nameDisplay.textContent = `รหัสของคุณ: ${document.getElementById("studentIdInput").value.trim()} ${name ? '(' + name + ')' : ''}`;
-        nameDisplay.parentElement.classList.remove('hidden');
-      } else {
-        nameDisplay.textContent = `รหัสของคุณ: ${document.getElementById("studentIdInput").value.trim()}`;
-      }
+      // นำข้อมูลลงใน DOM (แสดงแค่รหัส ไม่แสดงชื่อ เพื่อไม่ให้รู้ว่าพี่รหัสคือใคร)
+      nameDisplay.textContent = `รหัสของคุณ: ${document.getElementById("studentIdInput").value.trim()}`;
 
       hintDisplay.textContent = hint;
 
