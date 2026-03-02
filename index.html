@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบค้นหาคำใบ้พี่รหัส</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Prompt', sans-serif;
+      background-color: #fce7f3;
+      /* Tailwind pink-100 */
+      background-image: linear-gradient(135deg, #fce7f3 0%, #ede9fe 100%);
+      /* soft pink to purple */
+      min-height: 100vh;
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+    /* Custom Spinner */
+    .loader {
+      border: 3px solid #f9a8d4;
+      /* pink-300 */
+      border-radius: 50%;
+      border-top: 3px solid #db2777;
+      /* pink-600 */
+      width: 22px;
+      height: 22px;
+      -webkit-animation: spin 1s linear infinite;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body class="flex flex-col items-center justify-center p-4 antialiased text-gray-800">
+
+  <div
+    class="glass-card w-full max-w-md rounded-3xl shadow-xl overflow-hidden my-auto transform transition-all duration-300 hover:shadow-2xl">
+    <!-- Header Section -->
+    <div class="bg-gradient-to-r from-pink-500 to-purple-600 p-8 text-center text-white relative">
+      <!-- Decorative circles -->
+      <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl"></div>
+      <div class="absolute bottom-0 left-0 -mb-4 -ml-4 w-20 h-20 bg-white opacity-10 rounded-full blur-lg"></div>
+
+      <h1 class="text-3xl font-bold mb-2 tracking-tight drop-shadow-sm text-white">ตามหาพี่รหัส 🕵️‍♀️</h1>
+      <p class="text-sm font-light text-pink-50">ระบุรหัสนิสิตเพื่อรับคำใบ้สุดพิเศษ!</p>
+
+      <!-- Round Indicator Widget -->
+      <div
+        class="absolute top-4 right-4 bg-white/20 px-3 py-1 rounded-full text-xs font-semibold border border-white/30 backdrop-blur-md shadow-sm flex items-center gap-1">
+        <span class="w-2 h-2 rounded-full bg-green-300 animate-pulse"></span>
+        <span id="roundBadge">รอบที่ 1</span>
+      </div>
+    </div>
+
+    <!-- Form & Actions -->
+    <div class="p-7 md:p-8">
+      <div class="mb-5 relative">
+        <label for="studentIdInput" class="block text-sm font-semibold text-gray-600 mb-2 ml-1">รหัสนิสิตของคุณ</label>
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-pink-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+          <input type="tel" id="studentIdInput" maxlength="8"
+            class="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-pink-200 focus:border-pink-500 focus:ring-4 focus:ring-pink-100 outline-none transition-all text-lg shadow-inner bg-white/90 placeholder-gray-400 font-medium"
+            placeholder="เช่น 66xxxxx (8 หลัก)">
+        </div>
+      </div>
+
+      <button id="searchBtn" onclick="searchHint()"
+        class="w-full bg-gradient-to-r from-pink-500 hover:from-pink-600 to-purple-500 hover:to-purple-600 focus:ring-4 focus:ring-pink-200 text-white font-semibold rounded-2xl text-lg px-5 py-4 mb-2 focus:outline-none transition-all duration-200 shadow-lg hover:shadow-pink-500/30 flex items-center justify-center gap-2 transform hover:-translate-y-0.5 active:translate-y-0">
+        <span id="btnText">ค้นหาคำใบ้</span>
+        <div id="loadingSpinner" class="loader hidden"></div>
+      </button> <!-- Search Button -->
+
+      <!-- Dynamic Result Area -->
+      <div id="resultContainer" class="mt-8 hidden animate-fade-in-up">
+
+        <!-- Success Card -->
+        <div id="resultCard"
+          class="p-6 rounded-2xl border-2 border-pink-100 bg-white/70 shadow-sm relative overflow-hidden hidden transform transition-all">
+          <!-- Decor element -->
+          <div class="absolute top-0 right-0 w-16 h-16 bg-pink-100 rounded-bl-full -z-10 opacity-50"></div>
+
+          <div class="flex items-center gap-2 mb-3">
+            <div class="bg-pink-100 text-pink-600 p-1.5 rounded-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div id="studentNameDisplay" class="text-sm font-semibold text-gray-600 w-full truncate"></div>
+          </div>
+
+          <div class="mt-4">
+            <div class="text-[10px] font-bold uppercase tracking-widest text-pink-400 mb-1">คำใบ้พี่รหัสของคุณ</div>
+            <div id="hintTextDisplay" class="text-xl md:text-2xl font-medium text-gray-800 leading-snug break-words">
+              <!-- ข้อความคำใบ้ -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Error Alert -->
+        <div id="errorBox"
+          class="p-4 bg-red-50/90 text-red-600 rounded-2xl border border-red-200 text-sm hidden flex items-start gap-3 shadow-sm backdrop-blur-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <span id="errorMessage" class="font-medium leading-relaxed"></span>
+        </div>
+      </div> <!-- resultContainer end -->
+
+    </div> <!-- padding wrap end -->
+
+    <!-- Footer Info -->
+    <div class="bg-white/40 p-3 text-center border-t border-white/50 backdrop-blur-sm">
+      <p class="text-xs text-gray-500 font-medium">Real-time update via Google Sheets ⚡</p>
+    </div>
+  </div> <!-- glass-card end -->
+
+  <!-- Inline Styles for simple animation -->
+  <style>
+    .animate-fade-in-up {
+      animation: fadeInUp 0.4s ease-out forwards;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+
+  <!-- App Logic -->
+  <script>
+    // !! REQUIRED: แทนที่ URL ด้านล่างด้วย Web App URL ที่ได้จาก Google Apps Script (Deploy > New Deployment > Web app > Copy URL) !!
+    const API_URL = "https://script.google.com/macros/s/AKfycbyRZVe_Ll0P2WVC9PyZmw0zMgOz0yLsGwXvKvjhzqO3sKC2zIJqG3bUbTU2xj-IqlF9jQ/exec"; // <-- VANGURL เปลี่ยนตรงนี้
+
+    // 1. อ่านค่า Parameter 'round' จาก URL (?round=1)
+    const urlParams = new URLSearchParams(window.location.search);
+    let currentRound = urlParams.get('round');
+
+    // ตรวจสอบความถูกต้องของ round (1, 2, 3) ถ้าไม่ใช่ให้เป็น 1
+    if (!['1', '2', '3'].includes(currentRound)) {
+      currentRound = '1';
+    }
+
+    // 2. แสดง UI รอบที่กำลังค้นหา
+    document.getElementById('roundBadge').textContent = `รอบที่ ${currentRound}`;
+
+    // 3. รองรับการกดปุ่ม Enter ในช่อง input สำหรับค้นหา
+    document.getElementById("studentIdInput").addEventListener("keypress", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        searchHint();
+      }
+    });
+
+    // ฟังก์ชันหลักในการค้นหาคำใบ้
+    async function searchHint() {
+      const idInput = document.getElementById("studentIdInput").value.trim();
+      const resultContainer = document.getElementById("resultContainer");
+
+      // Validate input เบื้องต้น (ต้องเป็นตัวเลข 8 หลัก)
+      if (!idInput) {
+        showError("กรุณาระบุรหัสนิสิตเพื่อค้นหาคำใบ้");
+        return;
+      }
+      if (!/^\d{8}$/.test(idInput)) {
+        showError("กรุณากรอกรหัสนิสิตเป็นตัวเลข 8 หลักให้ครบถ้วน");
+        return;
+      }
+
+      // ซ่อนผลลัพธ์เก่าและขึ้น Loading
+      hideResult();
+      setLoading(true);
+
+      try {
+        // สร้าง Query String ส่งค่าไปหา Google Apps Script API
+        // เพิ่ม parameter `t` เพื่อป้องกัน Browser Caching สำหรับ Real-time
+        const fetchUrl = `${API_URL}?id=${encodeURIComponent(idInput)}&round=${currentRound}&t=${new Date().getTime()}`;
+
+        // ใช้ fetch API (เริ่มต้นเป็น GET method โดยอัตโนมัติ)
+        const response = await fetch(fetchUrl);
+
+        if (!response.ok) {
+          throw new Error(`คำขอล้มเหลว สถานะ: ${response.status}`);
+        }
+
+        // แปลงผลลัพธ์จาก JSON String ออกมาเป็น JS Object
+        const data = await response.json();
+
+        if (data.success) {
+          // หาก success = true -> พบข้อมูล
+          showSuccess(data.hint, data.name || "");
+        } else {
+          // หาก success = false -> ไม่พบข้อมูลหรือมี Error Message ส่งกลับมา
+          showError(data.message || "ไม่พบข้อมูลในระบบ");
+        }
+      } catch (error) {
+        console.error("Fetch Error:", error);
+        showError("ขณะนี้ไม่สามารถเชื่อมต่อระบบฐานข้อมูลได้ โปรดลองอีกครั้งในภายหลัง หรือตรวจสอบ API URL ว่าเชื่อมต่อถูกต้องหรือไม่");
+      } finally {
+        // ปิดสถานะ Loading ท้ายสุดเสมอ
+        setLoading(false);
+      }
+    }
+
+    // จัดการสถานะปุ่ม Loading/Disabled
+    function setLoading(isLoading) {
+      const btnText = document.getElementById("btnText");
+      const spinner = document.getElementById("loadingSpinner");
+      const btn = document.getElementById("searchBtn");
+      const input = document.getElementById("studentIdInput");
+
+      if (isLoading) {
+        btnText.textContent = "กำลังวิเคราะห์ข้อมูล...";
+        spinner.classList.remove("hidden");
+        btn.disabled = true;
+        btn.classList.add("opacity-75", "cursor-wait");
+        input.disabled = true;
+      } else {
+        btnText.textContent = "ค้นหาคำใบ้";
+        spinner.classList.add("hidden");
+        btn.disabled = false;
+        btn.classList.remove("opacity-75", "cursor-wait");
+        input.disabled = false;
+      }
+    }
+
+    // ซ่อน Card และ Error Box ก่อนเริ่มค้นหาใหม่
+    function hideResult() {
+      const container = document.getElementById('resultContainer');
+      // รีเซ็ต animation ให้ขึ้นเล่นใหม่ได้
+      container.classList.remove('animate-fade-in-up');
+      // trigger reflow hack
+      void container.offsetWidth;
+      container.classList.add('hidden');
+
+      document.getElementById('resultCard').classList.add('hidden');
+      document.getElementById('errorBox').classList.add('hidden');
+    }
+
+    // แสดงผลลัพธ์เมื่อค้นหาสำเร็จ
+    function showSuccess(hint, name) {
+      const container = document.getElementById('resultContainer');
+      const card = document.getElementById('resultCard');
+      const nameDisplay = document.getElementById('studentNameDisplay');
+      const hintDisplay = document.getElementById('hintTextDisplay');
+
+      // นำข้อมูลลงใน DOM
+      if (name) {
+        nameDisplay.textContent = `รหัสของคุณ: ${document.getElementById("studentIdInput").value.trim()} ${name ? '(' + name + ')' : ''}`;
+        nameDisplay.parentElement.classList.remove('hidden');
+      } else {
+        nameDisplay.textContent = `รหัสของคุณ: ${document.getElementById("studentIdInput").value.trim()}`;
+      }
+
+      hintDisplay.textContent = hint;
+
+      // ตกแต่ง Style เพิ่มเติมกรณีที่ยังไม่มีคำใบ้ในช่อง
+      if (hint === "ยังไม่มีข้อมูลในรอบนี้") {
+        hintDisplay.classList.add('text-gray-400', 'italic', 'text-lg');
+        hintDisplay.classList.remove('text-gray-800', 'text-xl', 'md:text-2xl', 'font-medium');
+      } else {
+        hintDisplay.classList.remove('text-gray-400', 'italic', 'text-lg');
+        hintDisplay.classList.add('text-gray-800', 'text-xl', 'md:text-2xl', 'font-medium');
+      }
+
+      // แสดงหน้าจอ
+      container.classList.add('animate-fade-in-up');
+      container.classList.remove('hidden');
+      card.classList.remove('hidden');
+    }
+
+    // แสดงข้อผิดพลาด
+    function showError(msg) {
+      const container = document.getElementById('resultContainer');
+      const errorBox = document.getElementById('errorBox');
+      const errMsg = document.getElementById('errorMessage');
+
+      errMsg.textContent = msg;
+
+      container.classList.add('animate-fade-in-up');
+      container.classList.remove('hidden');
+      errorBox.classList.remove('hidden');
+    }
+  </script>
+</body>
+
+</html>
